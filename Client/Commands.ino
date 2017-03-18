@@ -1,47 +1,75 @@
+#include <avr\io.h>
 
-#define kAuth L("Auth")
-#define kMemSize L("MemSize")
-#define kMemContext L("MemContext")
-#define kNeedReboot L("NeedReboot")
-#define kSignedUp L("SignedUp")
+extern char *const __brkval;
+extern char *const __data_start;
 
-uint16 memSize() {
-  uint16 startAddr;
-  uint16 endAddr;
-  uint16 size = endAddr - startAddr;
+#define kAuth F("Auth")
+#define kMemSize F("MemSize")
+#define kMemContext F("MemContext")
+#define kNeedReboot F("NeedReboot")
+#define kSignedUp F("SignedUp")
 
-  Serial.print(L("Start: "));
-  Serial.println(startAddr, HEX);
-  Serial.print(L("End: "));
-  Serial.println(endAddr, HEX);
-  Serial.print(L("Size: "));
-  Serial.println(size, HEX);
-  return size;
+uint8_t * freeMemStart()
+{
+	if (__brkval == 0) {
+		return (uint8_t *)__malloc_heap_start;
+	}
+	else {
+		return (uint8_t *)__brkval;
+	}
 }
 
-string memContent() {
+uint8_t * freeMemEnd() {
+	return (uint8_t *)(SP);
+}
 
+int memSize() {
+	uint8_t *startAddr = freeMemStart();
+	uint8_t *endAddr = freeMemEnd();
+	int size = endAddr - startAddr;
+
+	char buffer[50];
+	snprintf(buffer, 50, "p=%p end=%p size=%X", startAddr, endAddr, size);
+	Serial.println(buffer);
+	return size;
+}
+
+void printMemContentToSerial() {
+	uint8_t *p = freeMemStart();
+	uint8_t *end = freeMemEnd();
+
+	do
+	{
+		Serial1.print(*p);
+		p++;
+	} while (p < end);
+
+}
+
+inline String WaitString() {
+	while (Serial1.available() == 0);
+
+	return Serial1.readStringUntil('\r');
 }
 
 void SignUp() {
   Serial.println(kAuth);
   Serial1.println(kAuth);
-  delay(100);
-  string response = Serial1.read();
+
+  String response = WaitString();
+  Serial.println(response);
   if (response == kMemSize) {
-    Serial.println(L("Send memSize."));
+    Serial.println(F("Send memSize."));
     Serial1.println(memSize());
-    delay(100);
 
-    response = Serial1.read();
+    response = WaitString();
+	Serial.println(response);
     if (response == kMemContext) {
-      Serial.println(L("Send memContext."));
-      Serial1.println(memContent());
-      delay(500);
+      Serial.println(F("Send memContext."));
+	  printMemContentToSerial();
 
-      response = Serial1.read();
+      response = WaitString();
       Serial.println(response);
-    }
+	}
   }
-
 }

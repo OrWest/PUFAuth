@@ -16,6 +16,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Client.ino" />
+    <None Include="Commands.ino" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="__vm\.Client.vsarduino.h">

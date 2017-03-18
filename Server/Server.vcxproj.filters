@@ -16,6 +16,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Server.ino" />
+    <None Include="Handle.ino" />
   </ItemGroup>
- 
+  <ItemGroup>
+    <ClInclude Include="__vm\.Server.vsarduino.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
 </Project>
