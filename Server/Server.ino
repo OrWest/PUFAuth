@@ -12,6 +12,8 @@ void setup() {
 	Serial.begin(115200);
 	Client.begin(57600);
 
+	randomSeed(analogRead(0));
+
 	if (!SD.begin(10)) {
 		Serial.println("SD error.");
 		while (true);

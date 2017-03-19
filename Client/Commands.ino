@@ -3,11 +3,17 @@
 extern char *const __brkval;
 extern char *const __data_start;
 
-#define kAuth F("Auth@")
+#define kAuthRequest F("Auth@")
+#define kAuth F("Auth")
+#define kSignUp F("SignUp")
 #define kMemSize F("MemSize")
 #define kMemContext F("MemContext")
 #define kNeedReboot F("NeedReboot")
 #define kSignedUp F("SignedUp")
+#define kAuthorized F("Authorized")
+#define kAccessDenied F("AccessDenied")
+
+#define delayBetweenBytesSending 15
 
 uint8_t *startAddr;
 uint8_t *endAddr;
@@ -46,8 +52,24 @@ void printMemContentToSerial() {
 	{
 		Server.write(*p);
 		p++;
-		delay(10);
+		delay(delayBetweenBytesSending);
 	} while (p < endAddr);
+}
+
+uint8_t byteByAddr(uint8_t addr) {
+	uint8_t *p = startAddr;
+	p += addr;
+
+	Serial.print("Offset: ");
+	Serial.print(addr, HEX);
+	Serial.print(" Addr: ");
+	char buffer[6];
+	snprintf(buffer, 6, "%p", p);
+	Serial.print(buffer);
+	Serial.print(" Value: ");
+	Serial.println(*p, HEX);
+
+	return *p;
 }
 
 inline String WaitString() {
@@ -55,17 +77,14 @@ inline String WaitString() {
 
 	String string = Server.readStringUntil('\r');
 	Server.read();
-	Server.read();
 
 	return string;
 }
 
 void SignUp() {
-  Serial.println(String(kAuth) + ID);
-  Server.println(String(kAuth) + ID);
-
   String response = WaitString();
   Serial.println(response);
+
   if (response == kMemSize) {
     Serial.println(F("Send memSize."));
     Server.println(memSize());
@@ -83,9 +102,9 @@ void SignUp() {
 		  while (true)
 		  {
 			  digitalWrite(13, HIGH);
-			  delay(500);
+			  delay(300);
 			  digitalWrite(13, LOW);
-			  delay(500);
+			  delay(300);
 		  }
 	  }
 	  else {
@@ -94,4 +113,68 @@ void SignUp() {
 	  }
 	}
   }
+}
+
+bool Auth() {
+	while (Server.available() < 4) // byte \r \n
+	{
+		while (Server.available() == 0);
+		delay(10);
+
+		if (Server.available() > 3) {
+			Serial.print("Available: ");
+			Serial.println(Server.available());
+			break;
+		}
+
+		uint8_t addr = Server.read();
+		Server.read();
+		Server.read();
+
+		Serial.print("Auth: Received: ");
+		Serial.println(addr, HEX);
+
+		Server.write(byteByAddr(addr));
+	}
+
+	String response = WaitString();
+	Serial.print("Auth: Received command: ");
+	Serial.println(response);
+
+	return response == kAuthorized;
+}
+
+void TryAuth() {
+	Serial.println(String(kAuthRequest) + ID);
+	Server.println(String(kAuthRequest) + ID);
+
+	String response = WaitString();
+	Serial.println(response);
+	if (response == kAuth) {
+		if (Auth()) {
+			while (true)
+			{
+				digitalWrite(13, HIGH);
+				delay(1000);
+				digitalWrite(13, LOW);
+				delay(1000);
+			}
+		}
+		else {
+			Serial.println("Access denied.");
+			while (true)
+			{
+				digitalWrite(13, HIGH);
+				delay(100);
+				digitalWrite(13, LOW);
+				delay(1000);
+			}
+		}
+	}
+	else if (response == kSignUp) {
+		SignUp();
+	}
+	else {
+		Serial.println(F("Received unknown command."));
+	}
 }

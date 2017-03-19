@@ -18,7 +18,7 @@ void setup() {
 	digitalWrite(13, LOW);
 
 	SaveDumpAddresses();
-	SignUp();
+	TryAuth();
 }
 
 // the loop function runs over and over again until power down or reset
