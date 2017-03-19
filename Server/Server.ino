@@ -4,11 +4,18 @@
  Author:	Alex Motor
 */
 
-// the setup function runs once when you press reset or power the board
+#include <SD.h>
+
+#define Client Serial1
 
 void setup() {
 	Serial.begin(115200);
-	Serial1.begin(57600);
+	Client.begin(57600);
+
+	if (!SD.begin(10)) {
+		Serial.println("SD error.");
+		while (true);
+	}
 }
 
 // the loop function runs over and over again until power down or reset

@@ -5,13 +5,19 @@
 */
 #include <SoftwareSerial.h>
 
-SoftwareSerial Serial1(3, 4); // RX, TX
+#define ID F("AN0")
+
+SoftwareSerial Server(3, 4); // RX, TX
 
 // the setup function runs once when you press reset or power the board
 void setup() {
 	Serial.begin(115200);
-	Serial1.begin(57600);
+	Server.begin(57600);
 
+	pinMode(13, OUTPUT);
+	digitalWrite(13, LOW);
+
+	SaveDumpAddresses();
 	SignUp();
 }
 
