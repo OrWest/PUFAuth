@@ -11,7 +11,7 @@
 #define dumpMaxCount 5
 #define byteMinCount 800
 #define timeout 5000
-#define maxCheckBytes 4
+#define maxCheckBytes 6
 #define requiredCheckBytes 4
 
 inline String WaitString() {
@@ -288,11 +288,13 @@ void Auth(String ID) {
 	}
 
 	bool authorized = AccessAllowed(recievedBytes, dumpBytes, maskBytes, requiredCheckBytes);
-	for (int i = requiredCheckBytes; i < maxCheckBytes; i++) {
+	if (!authorized) {
+		for (int i = requiredCheckBytes; i < maxCheckBytes; i++) {
 
-		recievedBytes[i] = SendAddrAndWaitValue(randomAddrs[i]);
-		authorized = AccessAllowed(recievedBytes, dumpBytes, maskBytes, i + 1);
-		if (authorized) break;
+			recievedBytes[i] = SendAddrAndWaitValue(randomAddrs[i]);
+			authorized = AccessAllowed(recievedBytes, dumpBytes, maskBytes, i + 1);
+			if (authorized) break;
+		}
 	}
 
 	if (authorized) {
