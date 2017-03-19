@@ -1,0 +1,90 @@
+Start server. Waiting for client...
+Auth@
+AN0
+Auth
+9A
+F2
+F8
+DF
+26
+54
+48
+DE
+Start check bytes.
+11110010
+11110010
+11110111
+XOR: 0
+Mask and value shifting(Mask has 1): i=0 mask=11110111
+Missed += 0
+Mask and value shifting(Mask has 1): i=0 mask=1111011
+Missed += 0
+Mask and value shifting(Mask has 1): i=0 mask=111101
+Missed += 0
+Mask and value shifting(Mask has 1): i=0 mask=1111
+Missed += 0
+Mask and value shifting(Mask has 1): i=0 mask=111
+Missed += 0
+Mask and value shifting(Mask has 1): i=0 mask=11
+Missed += 0
+Mask and value shifting(Mask has 1): i=0 mask=1
+Missed += 0
+11011111
+11010111
+11110111
+XOR: 1000
+Mask and value shifting(Mask has 1): i=1 mask=11110111
+Missed += 0
+Mask and value shifting(Mask has 1): i=1 mask=1111011
+Missed += 0
+Mask and value shifting(Mask has 1): i=1 mask=111101
+Missed += 0
+Mask and value shifting(Mask has 1): i=1 mask=1111
+Missed += 0
+Mask and value shifting(Mask has 1): i=1 mask=111
+Missed += 0
+Mask and value shifting(Mask has 1): i=1 mask=11
+Missed += 0
+Mask and value shifting(Mask has 1): i=1 mask=1
+Missed += 0
+1010100
+1010100
+11111111
+XOR: 0
+Mask and value shifting(Mask has 1): i=2 mask=11111111
+Missed += 0
+Mask and value shifting(Mask has 1): i=2 mask=1111111
+Missed += 0
+Mask and value shifting(Mask has 1): i=2 mask=111111
+Missed += 0
+Mask and value shifting(Mask has 1): i=2 mask=11111
+Missed += 0
+Mask and value shifting(Mask has 1): i=2 mask=1111
+Missed += 0
+Mask and value shifting(Mask has 1): i=2 mask=111
+Missed += 0
+Mask and value shifting(Mask has 1): i=2 mask=11
+Missed += 0
+Mask and value shifting(Mask has 1): i=2 mask=1
+Missed += 0
+11011110
+11011100
+11111101
+XOR: 10
+Mask and value shifting(Mask has 1): i=3 mask=11111101
+Missed += 0
+Mask and value shifting(Mask has 1): i=3 mask=111111
+Missed += 0
+Mask and value shifting(Mask has 1): i=3 mask=11111
+Missed += 0
+Mask and value shifting(Mask has 1): i=3 mask=1111
+Missed += 0
+Mask and value shifting(Mask has 1): i=3 mask=111
+Missed += 0
+Mask and value shifting(Mask has 1): i=3 mask=11
+Missed += 0
+Mask and value shifting(Mask has 1): i=3 mask=1
+Missed += 0
+Bytes count=29 Missed count=0
+Missed percent=0.00
+Authorized

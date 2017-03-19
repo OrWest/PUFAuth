@@ -1,0 +1,94 @@
+Start server. Waiting for client...
+Auth@
+AN0
+Auth
+DF
+FB
+79
+7F
+D2
+44
+BA
+DB
+Start check bytes.
+11111011
+10111011
+10111111
+XOR: 1000000
+Mask and value shifting(Mask has 1): i=0 mask=10111111
+Missed += 0
+Mask and value shifting(Mask has 1): i=0 mask=1011111
+Missed += 0
+Mask and value shifting(Mask has 1): i=0 mask=101111
+Missed += 0
+Mask and value shifting(Mask has 1): i=0 mask=10111
+Missed += 0
+Mask and value shifting(Mask has 1): i=0 mask=1011
+Missed += 0
+Mask and value shifting(Mask has 1): i=0 mask=101
+Missed += 0
+Mask and value shifting(Mask has 1): i=0 mask=1
+Missed += 0
+1111111
+1111111
+11111111
+XOR: 0
+Mask and value shifting(Mask has 1): i=1 mask=11111111
+Missed += 0
+Mask and value shifting(Mask has 1): i=1 mask=1111111
+Missed += 0
+Mask and value shifting(Mask has 1): i=1 mask=111111
+Missed += 0
+Mask and value shifting(Mask has 1): i=1 mask=11111
+Missed += 0
+Mask and value shifting(Mask has 1): i=1 mask=1111
+Missed += 0
+Mask and value shifting(Mask has 1): i=1 mask=111
+Missed += 0
+Mask and value shifting(Mask has 1): i=1 mask=11
+Missed += 0
+Mask and value shifting(Mask has 1): i=1 mask=1
+Missed += 0
+1000100
+1000100
+11111111
+XOR: 0
+Mask and value shifting(Mask has 1): i=2 mask=11111111
+Missed += 0
+Mask and value shifting(Mask has 1): i=2 mask=1111111
+Missed += 0
+Mask and value shifting(Mask has 1): i=2 mask=111111
+Missed += 0
+Mask and value shifting(Mask has 1): i=2 mask=11111
+Missed += 0
+Mask and value shifting(Mask has 1): i=2 mask=1111
+Missed += 0
+Mask and value shifting(Mask has 1): i=2 mask=111
+Missed += 0
+Mask and value shifting(Mask has 1): i=2 mask=11
+Missed += 0
+Mask and value shifting(Mask has 1): i=2 mask=1
+Missed += 0
+11011011
+11011011
+11111111
+XOR: 0
+Mask and value shifting(Mask has 1): i=3 mask=11111111
+Missed += 0
+Mask and value shifting(Mask has 1): i=3 mask=1111111
+Missed += 0
+Mask and value shifting(Mask has 1): i=3 mask=111111
+Missed += 0
+Mask and value shifting(Mask has 1): i=3 mask=11111
+Missed += 0
+Mask and value shifting(Mask has 1): i=3 mask=1111
+Missed += 0
+Mask and value shifting(Mask has 1): i=3 mask=111
+Missed += 0
+Mask and value shifting(Mask has 1): i=3 mask=11
+Missed += 0
+Mask and value shifting(Mask has 1): i=3 mask=1
+Missed += 0
+Bytes count=31 Missed count=0
+Missed percent=0.00
+Authorized
