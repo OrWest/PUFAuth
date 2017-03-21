@@ -1,6 +1,5 @@
-#define kAuthRequest F("Auth@")
 #define kAuth F("Auth")
-#define kSignUp F("SignUp")
+#define kMemSmall F("MemToSmall")
 #define kMemSize F("MemSize")
 #define kMemContext F("MemContext")
 #define kNeedReboot F("NeedReboot")
@@ -8,11 +7,11 @@
 #define kAuthorized F("Authorized")
 #define kAccessDenied F("AccessDenied")
 
-#define dumpMaxCount 5
+#define dumpMaxCount 2
 #define byteMinCount 800
 #define timeout 5000
-#define maxCheckBytes 6
 #define requiredCheckBytes 4
+#define maxMissingPercent 0.1
 
 inline String WaitString() {
 	while (Client.available() == 0);
@@ -38,7 +37,47 @@ inline void ClearRX() {
 	while (Client.read() >= 0);
 }
 
-void ReadBytesAndWriteToSDFile(String fileName, int bytesCount) {
+String dirNameToDumpStack(String size) {
+	int dumpCount = 0;
+	String dirName = size + "/" + String(dumpCount);
+	while (SD.exists(dirName) && SD.exists(dirName + "/mask")) {
+		dumpCount++;
+		dirName = size + "/" + String(dumpCount);
+	} 
+
+	if (!SD.exists(dirName)) {
+		SD.mkdir(dirName);
+	}
+
+	return String(dumpCount);
+}
+
+String fileNameToSave(String size) {
+	if (!SD.exists(size)) {
+		SD.mkdir(size);
+		Serial.println("Create new dir: " + size);
+	}
+	 
+	String dirName = dirNameToDumpStack(size);
+	String fileName;
+	int dumpCount = 0;
+
+	while (dumpCount < dumpMaxCount)
+	{
+		String peekName = size + "/" + dirName + "/dump" + String(dumpCount);
+		if (!SD.exists(peekName)) {
+			fileName = peekName;
+			break;
+		}
+		dumpCount++;
+	}
+
+	Serial.println(fileName);
+	return fileName;
+}
+
+void ReadBytesAndWriteToSDFile(int bytesCount) {
+	String fileName = fileNameToSave(String(bytesCount));
 	File file = SD.open(fileName, FILE_WRITE);
 
 	int i = 0;
@@ -56,27 +95,6 @@ void ReadBytesAndWriteToSDFile(String fileName, int bytesCount) {
 	}
 
 	file.close();
-}
-
-String fileNameToSave(String ID) {
-	if (!SD.exists(ID)) {
-		SD.mkdir(ID);
-	}
-
-	int dumpCount = 0;
-	String fileName;
-	while (dumpCount < dumpMaxCount)
-	{
-		String peekName = ID + "/dump" + String(dumpCount) + ".txt";
-		if (!SD.exists(peekName)) {
-			fileName = peekName;
-			break;
-		}
-		dumpCount++;
-	}
-
-	Serial.println(fileName);
-	return fileName;
 }
 
 inline void closeFiles(File files[], int count) {
@@ -108,20 +126,26 @@ void fillMaskFile(File files[], File maskFile) {
 	}
 }
 
-void removeDumpsExceptFirst(String ID) {
-	for (int i = 1; i < dumpMaxCount; i++) {
-		String fileName = ID + "/dump" + String(i) + ".txt";
-		SD.remove(fileName);
+void removeDumpsExceptFirst(String dirPath) {
+
+	int dumpNum = 1;
+	String dumpPath = dirPath + "/dump" + String(dumpNum);
+	while (SD.exists(dumpPath)) 
+	{
+		SD.remove(dumpPath);
+		dumpNum++;
+		dumpPath = dirPath + "/dump" + String(dumpNum);
 	}
 }
 
-bool generateXorMask(String ID) {
+bool generateXorMask(String size) {
 	File files[dumpMaxCount];
 
+	String dirName = dirNameToDumpStack(size);
 	int dumpCount = 0;
 	while (dumpCount < dumpMaxCount)
 	{
-		String peekName = ID + "/dump" + String(dumpCount) + ".txt";
+		String peekName = size + "/" + dirName + "/dump" + String(dumpCount);
 		if (!SD.exists(peekName)) {
 			Serial.println(peekName + " doesn't exist. Sign up hasn't been completed yet.");
 
@@ -135,38 +159,26 @@ bool generateXorMask(String ID) {
 	}
 
 	Serial.println("Create mask file.");
-	File maskFile = SD.open(ID + "/mask.txt", FILE_WRITE);
+	File maskFile = SD.open(size + "/" + dirName + "/mask", FILE_WRITE);
 	fillMaskFile(files, maskFile);
 
 	closeFiles(files, dumpMaxCount);
 	maskFile.close();
 
-	Serial.println("Remove unnecessary dumps.");
-	removeDumpsExceptFirst(ID);
+	Serial.println("Remove all dumps except first.");
+	removeDumpsExceptFirst(size + "/" + dirName);
 
 	return true;
 }
 
-bool SignUpCompleted(String ID) {
-
-	bool signedUp = generateXorMask(ID);
-	if (signedUp) {
-		Serial.println("Sign up has completed. Generate xOR mask and remove other dumps.");
-	}
-	else {
-		Serial.println("Sign up hasn't been completed yet.");
-	}
-
-	return signedUp;
+inline bool SignUpCompleted(String size) {
+	return generateXorMask(size);
 }
 
-void SignUp(String ID) {
-	Serial.println(kSignUp);
-	Client.println(kSignUp);
+void SignUp() {
 
 	Serial.println(kMemSize);
 	Client.println(kMemSize);
-
 
 	while (Client.available() == 0);
 	int size = Client.parseInt();
@@ -178,9 +190,9 @@ void SignUp(String ID) {
 		Serial.println(kMemContext);
 		Client.println(kMemContext);
 
-		ReadBytesAndWriteToSDFile(fileNameToSave(ID), size);
+		ReadBytesAndWriteToSDFile(size);
 
-		String commandToResponse = SignUpCompleted(ID) ? kSignedUp : kNeedReboot;
+		String commandToResponse = SignUpCompleted(String(size)) ? kSignedUp : kNeedReboot;
 
 		Serial.println(commandToResponse);
 		Client.println(commandToResponse);
@@ -189,6 +201,9 @@ void SignUp(String ID) {
 		Serial.print(size);
 		Serial.print(" less then ");
 		Serial.println(byteMinCount);
+
+		Serial.println(kMemSmall);
+		Client.println(kMemSmall);
 	}
 }
 
@@ -229,9 +244,9 @@ bool AccessAllowed(uint8_t receivedBytes[], uint8_t dumpBytes[], uint8_t maskByt
 	int chechBytesCount = 0;
 	int missedBytesCount = 0;
 	for (int i = 0; i < count; i++) {
-		Serial.println(receivedBytes[i], BIN);
-		Serial.println(dumpBytes[i], BIN);
-		Serial.println(maskBytes[i], BIN);
+		//Serial.println(receivedBytes[i], BIN);
+		//Serial.println(dumpBytes[i], BIN);
+		//Serial.println(maskBytes[i], BIN);
 
 		int value = receivedBytes[i] ^ dumpBytes[i];
 		Serial.print("XOR: ");
@@ -240,13 +255,13 @@ bool AccessAllowed(uint8_t receivedBytes[], uint8_t dumpBytes[], uint8_t maskByt
 
 		for (int j = 0; j < 8; j++) {
 			if (mask & 0x01 == 1) {
-				Serial.print("Mask and value shifting(Mask has 1): i=");
-				Serial.print(i);
-				Serial.print(" mask=");
-				Serial.println(mask, BIN);
+				//Serial.print("Mask and value shifting(Mask has 1): i=");
+				//Serial.print(i);
+				//Serial.print(" mask=");
+				//Serial.println(mask, BIN);
 				chechBytesCount++;
-				Serial.print("Missed += ");
-				Serial.println(value & 0x01);
+				//Serial.print("Missed += ");
+				//Serial.println(value & 0x01);
 				missedBytesCount += value & 0x01;
 			}
 			mask >>= 1;
@@ -254,50 +269,68 @@ bool AccessAllowed(uint8_t receivedBytes[], uint8_t dumpBytes[], uint8_t maskByt
 		}
 	}
 
-	Serial.print("Bytes count=");
-	Serial.print(chechBytesCount);
-	Serial.print(" Missed count=");
-	Serial.println(missedBytesCount);
+	//Serial.print("Bytes count=");
+	//Serial.print(chechBytesCount);
+	//Serial.print(" Missed count=");
+	//Serial.println(missedBytesCount);
 
 	double missedPercent = missedBytesCount / (double)chechBytesCount;
 	Serial.print("Missed percent=");
 	Serial.println(missedPercent);
 
-	return missedPercent < 0.1;
+	return missedPercent < maxMissingPercent;
 }
 
-void Auth(String ID) {
-	Serial.println(kAuth);
-	Client.println(kAuth);
+bool Auth(uint8_t *addrs, uint8_t *receivedBytes, String size) {
+	bool authorized = false;
 
-	File dump = SD.open(ID + "/dump0.txt");
-	File mask = SD.open(ID + "/mask.txt");
-	long fileSize = dump.size();
+	if (!SD.exists(size)) {
+		return false;
+	}
 
-	uint8_t randomAddrs[6];
-	for (int i = 0; i < maxCheckBytes; i++) {
-		uint8_t randomAddr = random(fileSize);
+	File sizeDir = SD.open(size);
+	File dumpDir = sizeDir.openNextFile();
+	while (dumpDir != NULL)
+	{
+		Serial.print("Search in dumpDir: ");
+		Serial.println(dumpDir.name());
+		uint8_t *dumpBytes = BytesFrom(SD.open(size + "/" + dumpDir.name() + "/dump0"), addrs, requiredCheckBytes);
+		uint8_t *maskBytes = BytesFrom(SD.open(size + "/" + dumpDir.name() + "/mask" ), addrs, requiredCheckBytes);
+		authorized = AccessAllowed(receivedBytes, dumpBytes, maskBytes, requiredCheckBytes);
+
+		if (authorized) {
+			break;
+		}
+
+		dumpDir.close();
+		dumpDir = sizeDir.openNextFile();
+	}
+	
+	Serial.println("Rewind directory.");
+	sizeDir.rewindDirectory();
+	sizeDir.close();
+	return authorized;
+}
+
+void Auth() {
+	Serial.println(kMemSize);
+	Client.println(kMemSize);
+
+	while (Client.available() == 0);
+	int size = Client.parseInt();
+
+	uint8_t randomAddrs[requiredCheckBytes];
+	for (int i = 0; i < requiredCheckBytes; i++) {
+		uint8_t randomAddr = random(size);
 		randomAddrs[i] = randomAddr;
 	}
-	uint8_t *dumpBytes = BytesFrom(dump, randomAddrs, 6);
-	uint8_t *maskBytes = BytesFrom(mask, randomAddrs, 6);
 
-	uint8_t recievedBytes[6];
+	uint8_t receivedBytes[requiredCheckBytes];
 	for (int i = 0; i < requiredCheckBytes; i++) {
-		recievedBytes[i] = SendAddrAndWaitValue(randomAddrs[i]);
+		receivedBytes[i] = SendAddrAndWaitValue(randomAddrs[i]);
 	}
 
-	bool authorized = AccessAllowed(recievedBytes, dumpBytes, maskBytes, requiredCheckBytes);
-	if (!authorized) {
-		for (int i = requiredCheckBytes; i < maxCheckBytes; i++) {
-
-			recievedBytes[i] = SendAddrAndWaitValue(randomAddrs[i]);
-			authorized = AccessAllowed(recievedBytes, dumpBytes, maskBytes, i + 1);
-			if (authorized) break;
-		}
-	}
-
-	if (authorized) {
+	if (Auth(randomAddrs, receivedBytes, String(size))) {
 		Serial.println(kAuthorized);
 		Client.println(kAuthorized);
 	}
@@ -307,23 +340,31 @@ void Auth(String ID) {
 	}
 }
 
-inline bool SignedUp(String ID) {
-	return SD.exists(ID + "/mask.txt");
-}
-
-void ClientHandle() {
-	Serial.println("Start server. Waiting for client...");
+void ClientSignUp() {
+	Serial.println("Start server(in SignUp mode). Waiting for client...");
 	String request = WaitString();
-	String authCommand = request.substring(0, 5);
-	String ID = request.substring(5);
 
-	Serial.println(authCommand);
-	Serial.println(ID);
-	if (authCommand == kAuthRequest) {
-		SignedUp(ID) ? Auth(ID) : SignUp(ID);
+	Serial.println(request);
+	if (request == kAuth) {
+		SignUp();
 	}
 	else {
-		Serial.print(authCommand);
+		Serial.print(request);
+		Serial.print(" not equal to ");
+		Serial.println(kAuth);
+	}
+}
+
+void ClientAuth() {
+	Serial.println("Start server. Waiting for client...");
+	String request = WaitString();
+
+	Serial.println(request);
+	if (request == kAuth) {
+		Auth();
+	}
+	else {
+		Serial.print(request);
 		Serial.print(" not equal to ");
 		Serial.println(kAuth);
 	}

@@ -3,9 +3,8 @@
 extern char *const __brkval;
 extern char *const __data_start;
 
-#define kAuthRequest F("Auth@")
 #define kAuth F("Auth")
-#define kSignUp F("SignUp")
+#define kMemSmall F("MemToSmall")
 #define kMemSize F("MemSize")
 #define kMemContext F("MemContext")
 #define kNeedReboot F("NeedReboot")
@@ -81,41 +80,7 @@ inline String WaitString() {
 	return string;
 }
 
-void SignUp() {
-  String response = WaitString();
-  Serial.println(response);
-
-  if (response == kMemSize) {
-    Serial.println(F("Send memSize."));
-    Server.println(memSize());
-
-    response = WaitString();
-	Serial.print(F("Response: "));
-	Serial.println(response);
-    if (response == kMemContext) {
-      Serial.println(F("Send memContext."));
-	  printMemContentToSerial();
-
-      response = WaitString();
-      Serial.println(response);
-	  if (response == kNeedReboot) {
-		  while (true)
-		  {
-			  digitalWrite(13, HIGH);
-			  delay(300);
-			  digitalWrite(13, LOW);
-			  delay(300);
-		  }
-	  }
-	  else {
-		  digitalWrite(13, HIGH);
-		  while (true);
-	  }
-	}
-  }
-}
-
-bool Auth() {
+void WaitAddrsAndSendValues() {
 	while (Server.available() < 4) // byte \r \n
 	{
 		while (Server.available() == 0);
@@ -136,22 +101,47 @@ bool Auth() {
 
 		Server.write(byteByAddr(addr));
 	}
-
-	String response = WaitString();
-	Serial.print("Auth: Received command: ");
-	Serial.println(response);
-
-	return response == kAuthorized;
 }
 
 void TryAuth() {
-	Serial.println(String(kAuthRequest) + ID);
-	Server.println(String(kAuthRequest) + ID);
+	Serial.println(String(kAuth));
+	Server.println(String(kAuth));
 
 	String response = WaitString();
 	Serial.println(response);
-	if (response == kAuth) {
-		if (Auth()) {
+
+	if (response == kMemSize) {
+		Serial.println(F("Send memSize."));
+		Server.println(memSize());
+
+		WaitAddrsAndSendValues();
+
+		String response = WaitString();
+		Serial.print(F("Response: "));
+		Serial.println(response);
+
+		if (response == kMemContext) {
+			Serial.println(F("Send memContext."));
+			printMemContentToSerial();
+
+			response = WaitString();
+			Serial.println(response);
+			if (response == kNeedReboot) {
+				while (true)
+				{
+					digitalWrite(13, HIGH);
+					delay(300);
+					digitalWrite(13, LOW);
+					delay(300);
+				}
+			}
+			else {
+				digitalWrite(13, HIGH);
+				while (true);
+			}
+		}
+		else if (response == kAuthorized) {
+			Serial.println(F("Device was authorized."));
 			while (true)
 			{
 				digitalWrite(13, HIGH);
@@ -160,8 +150,8 @@ void TryAuth() {
 				delay(1000);
 			}
 		}
-		else {
-			Serial.println("Access denied.");
+		else if (response == kAccessDenied) {
+			Serial.println(F("Access denied."));
 			while (true)
 			{
 				digitalWrite(13, HIGH);
@@ -170,11 +160,13 @@ void TryAuth() {
 				delay(1000);
 			}
 		}
-	}
-	else if (response == kSignUp) {
-		SignUp();
+		else {
+			Serial.print(F("Received unknown command. "));
+			Serial.println(response.length());
+		}
 	}
 	else {
-		Serial.println(F("Received unknown command."));
+		Serial.print(F("Received unknown command. "));
+		Serial.println(response.length());
 	}
 }

@@ -6,6 +6,7 @@
 
 #include <SD.h>
 
+//#define SIGNUP
 #define Client Serial1
 
 void setup() {
@@ -22,5 +23,10 @@ void setup() {
 
 // the loop function runs over and over again until power down or reset
 void loop() {
-	ClientHandle();
+#ifdef SIGNUP
+	ClientSignUp();
+#else
+	ClientAuth();
+#endif // SIGNUP
+
 }

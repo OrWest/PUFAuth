@@ -5,8 +5,6 @@
 */
 #include <SoftwareSerial.h>
 
-#define ID F("AN0")
-
 SoftwareSerial Server(3, 4); // RX, TX
 
 // the setup function runs once when you press reset or power the board
