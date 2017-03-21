@@ -28,8 +28,8 @@ inline uint8_t* freeMemStart()
 }
 
 void SaveDumpAddresses() {
-	startAddr = freeMemStart() + 100;
-	endAddr = (uint8_t *)(SP) - 100;
+	startAddr = freeMemStart() + 64;
+	endAddr = (uint8_t *)(SP) - 192;
 }
 
 int memSize() {
@@ -44,9 +44,6 @@ int memSize() {
 void printMemContentToSerial() {
 	uint8_t *p = startAddr;
 
-	char buffer[20];
-	snprintf(buffer, 20, "p=%p end=%p", p, endAddr);
-	Serial.println(buffer);
 	do
 	{
 		Server.write(*p);
@@ -87,7 +84,7 @@ void WaitAddrsAndSendValues() {
 		delay(10);
 
 		if (Server.available() > 3) {
-			Serial.print("Available: ");
+			Serial.print(F("Available: "));
 			Serial.println(Server.available());
 			break;
 		}
@@ -96,7 +93,7 @@ void WaitAddrsAndSendValues() {
 		Server.read();
 		Server.read();
 
-		Serial.print("Auth: Received: ");
+		Serial.print(F("Auth: Received: "));
 		Serial.println(addr, HEX);
 
 		Server.write(byteByAddr(addr));
@@ -116,7 +113,7 @@ void TryAuth() {
 
 		WaitAddrsAndSendValues();
 
-		String response = WaitString();
+		response = WaitString();
 		Serial.print(F("Response: "));
 		Serial.println(response);
 
