@@ -6,12 +6,15 @@
 
 #include <SD.h>
 
-//#define SIGNUP
+#define SIGNUP
 #define Client Serial1
 
 void setup() {
 	Serial.begin(115200);
 	Client.begin(57600);
+
+	while (!Serial) {}
+	Serial.println("Start");
 
 	randomSeed(analogRead(0));
 
