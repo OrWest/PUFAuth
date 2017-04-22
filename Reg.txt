@@ -1,0 +1,26 @@
+Start server(in SignUp mode). Waiting for client...
+MemSize
+1408
+MemContext
+Create new dir: 1408
+1408/0/dump0
+Bytes missed. Rollback.
+1408/0/dump0 doesn't exist. Sign up hasn't been completed yet.
+NeedReboot
+
+Start server(in SignUp mode). Waiting for client...
+MemSize
+1408
+MemContext
+1408/0/dump0
+1408/0/dump1 doesn't exist. Sign up hasn't been completed yet.
+NeedReboot
+
+Start server(in SignUp mode). Waiting for client...
+MemSize
+1408
+MemContext
+1408/0/dump1
+Create mask file.
+Remove all dumps except first.
+SignedUp
