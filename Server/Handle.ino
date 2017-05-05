@@ -1,3 +1,4 @@
+// Протокол
 #define kAuth F("Auth")
 #define kMemSmall F("MemToSmall")
 #define kMemSize F("MemSize")
@@ -7,12 +8,14 @@
 #define kAuthorized F("Authorized")
 #define kAccessDenied F("AccessDenied")
 
+// Конфигурация сервера
 #define dumpMaxCount 2
 #define byteMinCount 800
 #define timeout 5000
 #define requiredCheckBytes 4
 #define maxMissingPercent 0.1
 
+// Ожидание запроса/ответа по клиента
 inline String WaitString() {
 	while (Client.available() == 0);
 
@@ -23,6 +26,7 @@ inline String WaitString() {
 	return string;
 }
 
+// Ожидание байта памяти от клиента
 inline bool WaitByte() {
 	long time = millis();
 	while (Client.available() == 0) {
@@ -33,10 +37,12 @@ inline bool WaitByte() {
 	return true;
 }
 
+// Очистка буфера входные данных по Serial
 inline void ClearRX() {
 	while (Client.read() >= 0);
 }
 
+// Путь папки с дампами нужного размера
 String dirNameToDumpStack(String size) {
 	int dumpCount = 0;
 	String dirName = size + "/" + String(dumpCount);
@@ -52,6 +58,8 @@ String dirNameToDumpStack(String size) {
 	return String(dumpCount);
 }
 
+// Адрес файла, который нужно использоваться 
+// для сохранение снимка памяти клиента
 String fileNameToSave(String size) {
 	if (!SD.exists(size)) {
 		SD.mkdir(size);
@@ -76,6 +84,7 @@ String fileNameToSave(String size) {
 	return fileName;
 }
 
+// Чтение байтов памяти клиента и запись их в файл на SD-карте
 void ReadBytesAndWriteToSDFile(int bytesCount) {
 	String fileName = fileNameToSave(String(bytesCount));
 	File file = SD.open(fileName, FILE_WRITE);
@@ -104,6 +113,7 @@ inline void closeFiles(File files[], int count) {
 	}
 }
 
+// Маска, которая показывает стабильные биты памяти.
 uint8_t maskFromBytes(uint8_t bytes[]) {
 
 	uint8_t orMask = bytes[0] ^ bytes[1];
@@ -115,6 +125,7 @@ uint8_t maskFromBytes(uint8_t bytes[]) {
 	return ~orMask;
 }
 
+// Заполнение файла маски на основании массива файлов со снимками памяти
 void fillMaskFile(File files[], File maskFile) {
 	for (int i = 0; i < files[0].size(); i++) {
 		uint8_t bytes[dumpMaxCount];
@@ -126,6 +137,7 @@ void fillMaskFile(File files[], File maskFile) {
 	}
 }
 
+// Удаление файлов со снимками клиента, кроме первого
 void removeDumpsExceptFirst(String dirPath) {
 
 	int dumpNum = 1;
@@ -138,6 +150,8 @@ void removeDumpsExceptFirst(String dirPath) {
 	}
 }
 
+// Если снимков хватает - генерируется маска устойчивости бит и возвращается true.
+// Иначе просто false.
 bool generateXorMask(String size) {
 	File files[dumpMaxCount];
 
@@ -175,6 +189,7 @@ inline bool SignUpCompleted(String size) {
 	return generateXorMask(size);
 }
 
+// Процедура регистрации нового клиентского устройства
 void SignUp() {
 
 	Serial.println(kMemSize);
@@ -207,6 +222,7 @@ void SignUp() {
 	}
 }
 
+// Ожидание байта от клиента
 uint8_t WaitAndGetByte() {
 	while (Client.available() == 0);
 
@@ -216,6 +232,8 @@ uint8_t WaitAndGetByte() {
 	return value;
 }
 
+// Отправка адреса памяти клиенту и
+// получение значения памяти по этому адресу от клиента
 uint8_t SendAddrAndWaitValue(uint8_t addr) {
 	ClearRX();
 
@@ -227,6 +245,7 @@ uint8_t SendAddrAndWaitValue(uint8_t addr) {
 	return receivedValue;
 }
 
+// Возвращает значения памяти из сохраненного снимка памяти по адресам
 uint8_t *BytesFrom(File file, uint8_t addrs[], int count) {
 	uint8_t *bytes = (uint8_t *)calloc(sizeof(uint8_t), count);
 
@@ -238,6 +257,8 @@ uint8_t *BytesFrom(File file, uint8_t addrs[], int count) {
 	return bytes;
 }
 
+// Проверяет полученные байты от клиента с сохраненными в файлах,
+// и возвращает флаг совпадение с определенной погрешностью.
 bool AccessAllowed(uint8_t receivedBytes[], uint8_t dumpBytes[], uint8_t maskBytes[], int count) {
 	Serial.println("Start check bytes.");
 
@@ -281,6 +302,7 @@ bool AccessAllowed(uint8_t receivedBytes[], uint8_t dumpBytes[], uint8_t maskByt
 	return missedPercent < maxMissingPercent;
 }
 
+// Проверяет полученные байты от клиента с сохраненными в файлах, и либо разрешает доступ, либо нет.
 bool Auth(uint8_t *addrs, uint8_t *receivedBytes, String size) {
 	bool authorized = false;
 
@@ -312,6 +334,7 @@ bool Auth(uint8_t *addrs, uint8_t *receivedBytes, String size) {
 	return authorized;
 }
 
+// Процедура идентификации клиентского устройства
 void Auth() {
 	Serial.println(kMemSize);
 	Client.println(kMemSize);
@@ -340,6 +363,7 @@ void Auth() {
 	}
 }
 
+// Ожидание подключения клиента и запуск процедуры регистрации при корректном запросе.
 void ClientSignUp() {
 	Serial.println("Start server(in SignUp mode). Waiting for client...");
 	String request = WaitString();
@@ -355,6 +379,7 @@ void ClientSignUp() {
 	}
 }
 
+// Ожидание подключения клиента и запуск процедуры идентификации при корректном запросе.
 void ClientAuth() {
 	Serial.println("Start server. Waiting for client...");
 	String request = WaitString();

@@ -1,8 +1,10 @@
 #include <avr\io.h>
 
+// Переменные доступа к ссылкам SRAM памяти
 extern char *const __brkval;
 extern char *const __data_start;
 
+// Протокол
 #define kAuth F("Auth")
 #define kMemSmall F("MemToSmall")
 #define kMemSize F("MemSize")
@@ -17,6 +19,7 @@ extern char *const __data_start;
 uint8_t *startAddr;
 uint8_t *endAddr;
 
+// Адрес начала свободной памяти
 inline uint8_t* freeMemStart()
 {
 	if (__brkval == 0) {
@@ -27,11 +30,13 @@ inline uint8_t* freeMemStart()
 	}
 }
 
+
 void SaveDumpAddresses() {
 	startAddr = freeMemStart() + 64;
 	endAddr = (uint8_t *)(SP) - 192;
 }
 
+// Размер свободной памяти
 int memSize() {
 	int size = endAddr - startAddr;
 
@@ -41,6 +46,7 @@ int memSize() {
 	return size;
 }
 
+// Последовательная отправка памяти серверу
 void printMemContentToSerial() {
 	uint8_t *p = startAddr;
 
@@ -68,6 +74,7 @@ uint8_t byteByAddr(uint8_t addr) {
 	return *p;
 }
 
+// Ожидание входящей строки от сервера
 inline String WaitString() {
 	while (Server.available() == 0);
 
@@ -77,6 +84,7 @@ inline String WaitString() {
 	return string;
 }
 
+// Ожидание адреса памяти и ответ серверу значением этого адреса
 void WaitAddrsAndSendValues() {
 	while (Server.available() < 4) // byte \r \n
 	{
@@ -100,6 +108,7 @@ void WaitAddrsAndSendValues() {
 	}
 }
 
+// Запрос серверу на идентификацию (Сервер сам решает какой процесс запустить).
 void TryAuth() {
 	Serial.println(String(kAuth));
 	Server.println(String(kAuth));
